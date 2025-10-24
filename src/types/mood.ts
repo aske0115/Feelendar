@@ -1,16 +1,27 @@
-export type MoodLevel = '행복해요' | '좋아요' | '보통이에요' | '우울해요' | '지쳤어요';
+export type ReflectionCategory = 'good' | 'bad' | 'sad';
 
-export type PrivacyLevel = '전체 공개' | '친구에게만' | '비공개';
-
-export type MoodEntry = {
+export type ReflectionEntry = {
   id: string;
-  mood: MoodLevel;
-  reason: string;
   date: string;
-  privacy: PrivacyLevel;
-  reactions: {
-    empathy: number;
-    cheer: number;
-    tips: number;
-  };
+  good: string;
+  bad: string;
+  sad: string;
+};
+
+export const reflectionLabels: Record<ReflectionCategory, { title: string; description: string; emoji: string }> = {
+  good: {
+    title: '좋았던 일',
+    description: '오늘 기분이 좋아진 순간',
+    emoji: '🌟'
+  },
+  bad: {
+    title: '아쉬웠던 일',
+    description: '마음이 힘들었던 순간',
+    emoji: '🌧️'
+  },
+  sad: {
+    title: '슬펐던 일',
+    description: '눈물이 날 뻔한 순간',
+    emoji: '💧'
+  }
 };
