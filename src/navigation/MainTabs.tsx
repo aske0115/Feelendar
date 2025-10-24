@@ -11,7 +11,7 @@ import StatisticsScreen from '../screens/Stats/StatisticsScreen';
 export type MainTabParamList = {
   Home: undefined;
   LogMood: undefined;
-  Community: undefined;
+  Moments: undefined;
   History: undefined;
   Stats: undefined;
 };
@@ -37,7 +37,7 @@ const MainTabs = () => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home';
           if (route.name === 'Home') iconName = 'home';
           if (route.name === 'LogMood') iconName = 'leaf';
-          if (route.name === 'Community') iconName = 'people';
+          if (route.name === 'Moments') iconName = 'book';
           if (route.name === 'History') iconName = 'calendar';
           if (route.name === 'Stats') iconName = 'stats-chart';
           return <Ionicons name={iconName} size={size} color={color} />;
@@ -46,7 +46,7 @@ const MainTabs = () => {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: '홈' }} />
       <Tab.Screen name="LogMood" component={MoodEntryScreen} options={{ title: '기분 기록' }} />
-      <Tab.Screen name="Community" component={SimilarMoodScreen} options={{ title: '공감' }} />
+      <Tab.Screen name="Moments" component={SimilarMoodScreen} options={{ title: '감정 모아보기' }} />
       <Tab.Screen name="History" component={MoodHistoryScreen} options={{ title: '히스토리' }} />
       <Tab.Screen name="Stats" component={StatisticsScreen} options={{ title: '통계' }} />
     </Tab.Navigator>

@@ -2,19 +2,21 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { theme } from '../theme/theme';
 
-const colors: Record<string, string> = {
-  행복해요: '#34D399',
-  좋아요: '#6EE7B7',
-  보통이에요: '#FBBF24',
-  우울해요: '#F97316',
-  지쳤어요: '#F87171'
+const colors = {
+  good: '#34D399',
+  bad: '#FBBF24',
+  sad: '#F87171'
 };
 
 type Props = {
   weeklyStats: {
     week: string;
     total: number;
-    counts: Record<string, number>;
+    counts: {
+      good: number;
+      bad: number;
+      sad: number;
+    };
   }[];
 };
 
@@ -25,32 +27,59 @@ const WeeklyTrend: React.FC<Props> = ({ weeklyStats }) => {
 
   return (
     <View style={styles.container}>
-      {weeklyStats.map((week) => (
-        <View key={week.week} style={styles.row}>
-          <View style={styles.weekLabel}>
-            <Text style={styles.weekText}>{week.week}</Text>
-            <Text style={styles.total}>{week.total}회</Text>
+      {weeklyStats.map((week) => {
+        const totalSegments = week.counts.good + week.counts.bad + week.counts.sad || 1;
+        const formattedWeek = formatWeekLabel(week.week);
+        return (
+          <View key={week.week} style={styles.row}>
+            <View style={styles.weekLabel}>
+              <Text style={styles.weekText}>{formattedWeek}</Text>
+              <Text style={styles.total}>{week.total}일 기록</Text>
+            </View>
+            <View style={styles.barContainer}>
+              {(['good', 'bad', 'sad'] as const).map((category) => (
+                <View
+                  key={category}
+                  style={[
+                    styles.bar,
+                    {
+                      flex: week.counts[category] === 0 ? 0 : week.counts[category] / totalSegments,
+                      backgroundColor: colors[category]
+                    }
+                  ]}
+                />
+              ))}
+            </View>
+            <View style={styles.legendRow}>
+              <LegendPill color={colors.good} label={`좋았던 일 ${week.counts.good}`} />
+              <LegendPill color={colors.bad} label={`아쉬웠던 일 ${week.counts.bad}`} />
+              <LegendPill color={colors.sad} label={`슬펐던 일 ${week.counts.sad}`} />
+            </View>
           </View>
-          <View style={styles.barContainer}>
-            {Object.entries(week.counts).map(([mood, count]) => (
-              <View
-                key={mood}
-                style={[styles.bar, { flex: count, backgroundColor: colors[mood] || theme.colors.primary }]}
-              />
-            ))}
-          </View>
-        </View>
-      ))}
+        );
+      })}
     </View>
   );
 };
 
+const formatWeekLabel = (week: string) => {
+  const [year, month, day] = week.split('-').map(Number);
+  if (!year || !month || !day) return week;
+  return `${month}월 ${day}일 주`;
+};
+
+const LegendPill: React.FC<{ color: string; label: string }> = ({ color, label }) => (
+  <View style={[styles.legendPill, { backgroundColor: color }]}> 
+    <Text style={styles.legendText}>{label}</Text>
+  </View>
+);
+
 const styles = StyleSheet.create({
   container: {
-    gap: 16
+    gap: 20
   },
   row: {
-    gap: 8
+    gap: 12
   },
   weekLabel: {
     flexDirection: 'row',
@@ -73,6 +102,20 @@ const styles = StyleSheet.create({
   },
   bar: {
     height: '100%'
+  },
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  },
+  legendPill: {
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4
+  },
+  legendText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600'
   },
   empty: {
     color: theme.colors.muted

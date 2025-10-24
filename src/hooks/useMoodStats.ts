@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import { MoodEntry } from '../types/mood';
+import { ReflectionEntry } from '../types/mood';
 
-export const useMoodStats = (entries: MoodEntry[]) => {
+export const useReflectionStats = (entries: ReflectionEntry[]) => {
   return useMemo(() => {
-    const weeklyBuckets: Record<string, MoodEntry[]> = {};
+    const weeklyBuckets: Record<string, ReflectionEntry[]> = {};
+
     entries.forEach((entry) => {
       const date = new Date(entry.date);
       const startOfWeek = new Date(date);
@@ -16,31 +17,50 @@ export const useMoodStats = (entries: MoodEntry[]) => {
       weeklyBuckets[key].push(entry);
     });
 
-    const weeklyStats = Object.entries(weeklyBuckets).map(([week, items]) => {
-      const counts = items.reduce(
-        (acc, item) => {
-          acc[item.mood] = (acc[item.mood] || 0) + 1;
-          return acc;
-        },
-        {} as Record<string, number>
-      );
+    const weeklyStats = Object.entries(weeklyBuckets)
+      .map(([week, items]) => {
+        const counts = items.reduce(
+          (acc, item) => {
+            if (item.good.trim()) acc.good += 1;
+            if (item.bad.trim()) acc.bad += 1;
+            if (item.sad.trim()) acc.sad += 1;
+            return acc;
+          },
+          { good: 0, bad: 0, sad: 0 }
+        );
 
-      return {
-        week,
-        total: items.length,
-        counts
-      };
-    });
+        return {
+          week,
+          total: items.length,
+          counts
+        };
+      })
+      .sort((a, b) => (a.week > b.week ? -1 : 1));
 
-    const latestWeek = weeklyStats[0];
-    const topMood = latestWeek
-      ? Object.entries(latestWeek.counts).sort((a, b) => b[1] - a[1])[0]?.[0]
-      : undefined;
+    const totals = entries.reduce(
+      (acc, item) => {
+        if (item.good.trim()) acc.good += 1;
+        if (item.bad.trim()) acc.bad += 1;
+        if (item.sad.trim()) acc.sad += 1;
+        return acc;
+      },
+      { good: 0, bad: 0, sad: 0 }
+    );
+
+    const recentHighlights = entries
+      .filter((item) => item.good.trim())
+      .slice(0, 3)
+      .map((item) => ({
+        id: item.id,
+        good: item.good,
+        date: item.date
+      }));
 
     return {
       totalEntries: entries.length,
       weeklyStats,
-      topMood
+      totals,
+      recentHighlights
     };
   }, [entries]);
 };
