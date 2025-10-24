@@ -21,26 +21,43 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   const [mockUsers, setMockUsers] = useState<Record<string, UserProfile & { password: string }>>({});
 
   const login = async (email: string, password: string) => {
-    const existingUser = mockUsers[email.toLowerCase()];
-    if (existingUser && existingUser.password === password) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = normalizedEmail ? mockUsers[normalizedEmail] : null;
+
+    if (existingUser) {
       setUser(existingUser);
       return;
     }
-    throw new Error('이메일 또는 비밀번호를 확인해주세요.');
+
+    const fallbackEmail = normalizedEmail || `guest-${Date.now()}@feelendar.app`;
+    const fallbackName = normalizedEmail
+      ? normalizedEmail.split('@')[0]
+      : '감정 여행자';
+
+    const newUser: UserProfile & { password: string } = {
+      id: Date.now().toString(),
+      name: fallbackName,
+      email: fallbackEmail,
+      password
+    };
+
+    setMockUsers((prev) => ({ ...prev, [fallbackEmail]: newUser }));
+    setUser(newUser);
   };
 
   const signup = async (name: string, email: string, password: string) => {
-    const normalizedEmail = email.toLowerCase();
-    if (mockUsers[normalizedEmail]) {
-      throw new Error('이미 가입된 이메일입니다.');
-    }
+    const normalizedEmail = email.trim().toLowerCase();
+    const fallbackEmail = normalizedEmail || `user-${Date.now()}@feelendar.app`;
+    const displayName = name.trim() || (normalizedEmail ? normalizedEmail.split('@')[0] : '감정 여행자');
+
     const newUser: UserProfile & { password: string } = {
       id: Date.now().toString(),
-      name,
-      email: normalizedEmail,
+      name: displayName,
+      email: fallbackEmail,
       password
     };
-    setMockUsers((prev) => ({ ...prev, [normalizedEmail]: newUser }));
+
+    setMockUsers((prev) => ({ ...prev, [fallbackEmail]: newUser }));
     setUser(newUser);
   };
 
@@ -54,7 +71,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       signup,
       logout
     }),
-    [user, mockUsers]
+    [user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

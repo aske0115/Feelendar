@@ -24,15 +24,6 @@ const SignupScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Signup'
   const [error, setError] = useState<string | null>(null);
 
   const handleSignup = async () => {
-    if (!name || !email || !password) {
-      setError('모든 필드를 입력해주세요.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('비밀번호가 일치하지 않습니다.');
-      return;
-    }
-
     try {
       setError(null);
       await signup(name, email, password);
@@ -76,7 +67,7 @@ const SignupScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Signup'
             style={styles.input}
           />
           <TextInput
-            placeholder="비밀번호 확인"
+            placeholder="비밀번호 확인 (임시로 생략 가능)"
             placeholderTextColor="#9CAFAA"
             secureTextEntry
             value={confirmPassword}

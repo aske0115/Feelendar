@@ -1,37 +1,37 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { MoodEntry } from '../types/mood';
+import { reflectionLabels, ReflectionCategory, ReflectionEntry } from '../types/mood';
 import { theme } from '../theme/theme';
-import MoodBadge from './MoodBadge';
-import ReactionButtons from './ReactionButtons';
-import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
-  entry: MoodEntry;
-  onReact: (type: 'empathy' | 'cheer' | 'tips') => void;
+  entry: ReflectionEntry;
 };
 
-const MoodCard: React.FC<Props> = ({ entry, onReact }) => {
+const orderedCategories: ReflectionCategory[] = ['good', 'bad', 'sad'];
+
+const MoodCard: React.FC<Props> = ({ entry }) => {
   const date = new Date(entry.date);
-  const formatted = `${date.getMonth() + 1}월 ${date.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][date.getDay()]}요일`;
+  const formatted = `${date.getMonth() + 1}월 ${date.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][date.getDay()]}요일)`;
 
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <MoodBadge mood={entry.mood} />
-        <View style={styles.privacy}>
-          <Ionicons name="lock-closed" size={14} color={theme.colors.muted} />
-          <Text style={styles.privacyText}>{entry.privacy}</Text>
-        </View>
-      </View>
-      <Text style={styles.reason}>{entry.reason}</Text>
       <Text style={styles.date}>{formatted}</Text>
-      <ReactionButtons
-        empathy={entry.reactions.empathy}
-        cheer={entry.reactions.cheer}
-        tips={entry.reactions.tips}
-        onReact={onReact}
-      />
+      <View style={styles.divider} />
+      {orderedCategories.map((category) => {
+        const label = reflectionLabels[category];
+        const value = entry[category];
+        const isEmpty = !value.trim();
+        return (
+          <View key={category} style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              {label.emoji} {label.title}
+            </Text>
+            <Text style={[styles.sectionContent, isEmpty && styles.emptyText]}>
+              {isEmpty ? '아직 기록이 없어요.' : value}
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
 };
@@ -41,29 +41,31 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
     padding: 16,
-    gap: 12
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  privacy: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4
-  },
-  privacyText: {
-    color: theme.colors.muted,
-    fontSize: 12
-  },
-  reason: {
-    fontSize: 16,
-    color: theme.colors.text,
-    lineHeight: 22
+    gap: 16
   },
   date: {
-    fontSize: 12,
+    fontSize: 13,
+    color: theme.colors.muted,
+    fontWeight: '600'
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E4F5EB'
+  },
+  section: {
+    gap: 6
+  },
+  sectionTitle: {
+    fontWeight: '700',
+    color: theme.colors.text,
+    fontSize: 15
+  },
+  sectionContent: {
+    color: theme.colors.text,
+    lineHeight: 20,
+    fontSize: 14
+  },
+  emptyText: {
     color: theme.colors.muted
   }
 });

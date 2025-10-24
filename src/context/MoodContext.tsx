@@ -1,48 +1,44 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { MoodEntry, MoodLevel, PrivacyLevel } from '../types/mood';
+import { ReflectionEntry } from '../types/mood';
 
-export type MoodContextValue = {
-  entries: MoodEntry[];
-  addEntry: (entry: Omit<MoodEntry, 'id' | 'reactions'>) => void;
-  updateEntry: (id: string, updates: Partial<Omit<MoodEntry, 'id'>>) => void;
+export type ReflectionContextValue = {
+  entries: ReflectionEntry[];
+  addEntry: (entry: Omit<ReflectionEntry, 'id'>) => void;
+  updateEntry: (id: string, updates: Partial<Omit<ReflectionEntry, 'id'>>) => void;
   deleteEntry: (id: string) => void;
-  reactToEntry: (id: string, type: keyof MoodEntry['reactions']) => void;
 };
 
-const MoodContext = createContext<MoodContextValue | undefined>(undefined);
+const ReflectionContext = createContext<ReflectionContextValue | undefined>(undefined);
 
-const initialEntries: MoodEntry[] = [
+const initialEntries: ReflectionEntry[] = [
   {
     id: 'seed-1',
-    mood: '지쳤어요',
-    reason: '프로젝트 마감이 겹쳐서 스트레스가 높아요.',
     date: new Date().toISOString(),
-    privacy: '전체 공개',
-    reactions: { empathy: 5, cheer: 3, tips: 2 }
+    good: '퇴근길에 들른 카페에서 맛있는 디저트를 먹었어요.',
+    bad: '회의 준비를 미루다가 급하게 하느라 마음이 급했어요.',
+    sad: '친구와의 약속을 지키지 못한 것이 마음에 걸렸어요.'
   },
   {
     id: 'seed-2',
-    mood: '행복해요',
-    reason: '오랜만에 산책하며 봄 공기를 느꼈어요.',
     date: new Date(Date.now() - 86400000).toISOString(),
-    privacy: '전체 공개',
-    reactions: { empathy: 2, cheer: 6, tips: 1 }
+    good: '산책하면서 봄바람을 느끼며 힐링했어요.',
+    bad: '업무 중 집중이 잘 되지 않아 작은 실수가 있었어요.',
+    sad: '가족과 통화하면서 서로 바빠서 자주 못 만난다는 이야기를 들었어요.'
   }
 ];
 
-export const MoodProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [entries, setEntries] = useState<MoodEntry[]>(initialEntries);
+export const ReflectionProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const [entries, setEntries] = useState<ReflectionEntry[]>(initialEntries);
 
-  const addEntry = (entry: Omit<MoodEntry, 'id' | 'reactions'>) => {
-    const newEntry: MoodEntry = {
+  const addEntry = (entry: Omit<ReflectionEntry, 'id'>) => {
+    const newEntry: ReflectionEntry = {
       ...entry,
-      id: Date.now().toString(),
-      reactions: { empathy: 0, cheer: 0, tips: 0 }
+      id: Date.now().toString()
     };
     setEntries((prev) => [newEntry, ...prev]);
   };
 
-  const updateEntry = (id: string, updates: Partial<Omit<MoodEntry, 'id'>>) => {
+  const updateEntry = (id: string, updates: Partial<Omit<ReflectionEntry, 'id'>>) => {
     setEntries((prev) =>
       prev.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry))
     );
@@ -52,43 +48,23 @@ export const MoodProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     setEntries((prev) => prev.filter((entry) => entry.id !== id));
   };
 
-  const reactToEntry = (id: string, type: keyof MoodEntry['reactions']) => {
-    setEntries((prev) =>
-      prev.map((entry) =>
-        entry.id === id
-          ? {
-              ...entry,
-              reactions: {
-                ...entry.reactions,
-                [type]: entry.reactions[type] + 1
-              }
-            }
-          : entry
-      )
-    );
-  };
-
   const value = useMemo(
     () => ({
       entries,
       addEntry,
       updateEntry,
-      deleteEntry,
-      reactToEntry
+      deleteEntry
     }),
     [entries]
   );
 
-  return <MoodContext.Provider value={value}>{children}</MoodContext.Provider>;
+  return <ReflectionContext.Provider value={value}>{children}</ReflectionContext.Provider>;
 };
 
-export const useMoods = () => {
-  const context = useContext(MoodContext);
+export const useReflections = () => {
+  const context = useContext(ReflectionContext);
   if (!context) {
-    throw new Error('useMoods는 MoodProvider 내부에서만 사용할 수 있습니다.');
+    throw new Error('useReflections는 ReflectionProvider 내부에서만 사용할 수 있습니다.');
   }
   return context;
 };
-
-export const moodOptions: MoodLevel[] = ['행복해요', '좋아요', '보통이에요', '우울해요', '지쳤어요'];
-export const privacyOptions: PrivacyLevel[] = ['전체 공개', '친구에게만', '비공개'];

@@ -1,88 +1,74 @@
-import React, { useMemo, useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
-import { moodOptions, useMoods } from '../../context/MoodContext';
-import MoodCard from '../../components/MoodCard';
+import { useReflections } from '../../context/MoodContext';
+import { reflectionLabels, ReflectionCategory } from '../../types/mood';
 import { theme } from '../../theme/theme';
 
-const SimilarMoodScreen: React.FC = () => {
-  const { entries, reactToEntry } = useMoods();
-  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+const categories: ReflectionCategory[] = ['good', 'bad', 'sad'];
 
-  const filtered = useMemo(() => {
-    if (!selectedMood) return entries.filter((entry) => entry.privacy !== '비공개');
-    return entries.filter((entry) => entry.mood === selectedMood && entry.privacy !== '비공개');
-  }, [entries, selectedMood]);
+const SimilarMoodScreen: React.FC = () => {
+  const { entries } = useReflections();
 
   return (
     <ScreenContainer>
-      <SectionCard title="비슷한 기분 둘러보기" subtitle="공개된 감정만 보여드려요">
-        <View style={styles.filterRow}>
-          <TouchableOpacity
-            style={[styles.filterChip, !selectedMood && styles.filterChipSelected]}
-            onPress={() => setSelectedMood(null)}
-          >
-            <Text style={[styles.filterText, !selectedMood && styles.filterTextSelected]}>전체</Text>
-          </TouchableOpacity>
-          {moodOptions.map((option) => (
-            <TouchableOpacity
-              key={option}
-              style={[styles.filterChip, selectedMood === option && styles.filterChipSelected]}
-              onPress={() => setSelectedMood(option)}
-            >
-              <Text
-                style={[styles.filterText, selectedMood === option && styles.filterTextSelected]}
-              >
-                {option}
+      <SectionCard title="감정별 모아보기" subtitle="최근 기록에서 공통된 키워드를 발견해보세요">
+        {categories.map((category) => {
+          const label = reflectionLabels[category];
+          const items = entries.filter((entry) => entry[category].trim());
+          return (
+            <View key={category} style={styles.section}>
+              <Text style={styles.sectionTitle}>
+                {label.emoji} {label.title}
               </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        {filtered.length === 0 ? (
-          <Text style={styles.empty}>아직 해당 감정의 공개 기록이 없어요.</Text>
-        ) : (
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-            renderItem={({ item }) => (
-              <MoodCard entry={item} onReact={(type) => reactToEntry(item.id, type)} />
-            )}
-          />
-        )}
+              {items.length === 0 ? (
+                <Text style={styles.empty}>아직 {label.title}에 대한 기록이 없어요.</Text>
+              ) : (
+                items.slice(0, 5).map((entry) => {
+                  const date = new Date(entry.date);
+                  return (
+                    <View key={`${entry.id}-${category}`} style={styles.item}>
+                      <Text style={styles.date}>{`${date.getMonth() + 1}월 ${date.getDate()}일`}</Text>
+                      <Text style={styles.content}>{entry[category]}</Text>
+                    </View>
+                  );
+                })
+              )}
+            </View>
+          );
+        })}
       </SectionCard>
     </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  filterRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16
+  section: {
+    marginBottom: 20
   },
-  filterChip: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: '#E8F4EF'
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.text,
+    marginBottom: 10
   },
-  filterChipSelected: {
-    backgroundColor: theme.colors.primaryDark
+  item: {
+    marginBottom: 12
   },
-  filterText: {
+  date: {
     color: theme.colors.muted,
-    fontWeight: '600',
-    fontSize: 13
+    fontSize: 12,
+    marginBottom: 4
   },
-  filterTextSelected: {
-    color: '#FFFFFF'
+  content: {
+    color: theme.colors.text,
+    lineHeight: 20,
+    fontSize: 14
   },
   empty: {
-    color: theme.colors.muted
+    color: theme.colors.muted,
+    lineHeight: 20
   }
 });
 
