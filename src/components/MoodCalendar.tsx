@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { ReflectionEntry } from '../types/mood';
 import { theme } from '../theme/theme';
 
@@ -20,18 +20,66 @@ type CalendarDay = {
     sad: boolean;
   };
   isToday: boolean;
+  isSelected: boolean;
 };
 
 type Props = {
   entries: ReflectionEntry[];
+  month?: Date;
+  onChangeMonth?: (date: Date) => void;
+  selectable?: boolean;
+  selectedDate?: string | null;
+  onSelectDate?: (dateKey: string) => void;
 };
 
-const MoodCalendar: React.FC<Props> = ({ entries }) => {
-  const { weeks, monthLabel } = useMemo(() => buildCalendar(entries), [entries]);
+const MoodCalendar: React.FC<Props> = ({
+  entries,
+  month,
+  onChangeMonth,
+  selectable = false,
+  selectedDate,
+  onSelectDate
+}) => {
+  const baseMonth = useMemo(
+    () => (month ? new Date(month.getFullYear(), month.getMonth(), 1) : new Date()),
+    [month]
+  );
+
+  const { weeks, monthLabel } = useMemo(
+    () => buildCalendar(entries, baseMonth, selectedDate),
+    [entries, baseMonth, selectedDate]
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.monthLabel}>{monthLabel}</Text>
+      <View style={styles.monthHeader}>
+        {onChangeMonth ? (
+          <>
+            <TouchableOpacity onPress={() => onChangeMonth(addMonths(baseMonth, -12))}>
+              <Text style={styles.monthControl}>{'≪'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onChangeMonth(addMonths(baseMonth, -1))}>
+              <Text style={styles.monthControl}>{'‹'}</Text>
+            </TouchableOpacity>
+          </>
+        ) : null}
+        <Text style={styles.monthLabel}>{monthLabel}</Text>
+        {onChangeMonth ? (
+          <>
+            <TouchableOpacity onPress={() => onChangeMonth(addMonths(baseMonth, 1))}>
+              <Text style={styles.monthControl}>{'›'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => onChangeMonth(addMonths(baseMonth, 12))}>
+              <Text style={styles.monthControl}>{'≫'}</Text>
+            </TouchableOpacity>
+          </>
+        ) : null}
+      </View>
+      {onChangeMonth ? (
+        <TouchableOpacity style={styles.todayButton} onPress={() => onChangeMonth(new Date())}>
+          <Text style={styles.todayButtonText}>오늘</Text>
+        </TouchableOpacity>
+      ) : null}
       <View style={styles.weekHeader}>
         {WEEK_DAYS.map((day) => (
           <Text key={day} style={styles.weekHeaderText}>
@@ -45,11 +93,8 @@ const MoodCalendar: React.FC<Props> = ({ entries }) => {
             if (!day) {
               return <View key={`empty-${weekIndex}-${dayIndex}`} style={styles.dayCell} />;
             }
-            return (
-              <View
-                key={day.key}
-                style={[styles.dayCell, day.isToday && styles.todayCell]}
-              >
+            const content = (
+              <>
                 <Text style={styles.dayLabel}>{day.label}</Text>
                 <View style={styles.dotRow}>
                   {(['good', 'bad', 'sad'] as const).map((category) =>
@@ -63,6 +108,31 @@ const MoodCalendar: React.FC<Props> = ({ entries }) => {
                     )
                   )}
                 </View>
+              </>
+            );
+
+            const containerStyles = [
+              styles.dayCell,
+              day.isToday && styles.todayCell,
+              day.isSelected && styles.selectedCell
+            ];
+
+            if (selectable && onSelectDate) {
+              return (
+                <TouchableOpacity
+                  key={day.key}
+                  style={containerStyles}
+                  activeOpacity={0.7}
+                  onPress={() => onSelectDate(day.key)}
+                >
+                  {content}
+                </TouchableOpacity>
+              );
+            }
+
+            return (
+              <View key={day.key} style={containerStyles}>
+                {content}
               </View>
             );
           })}
@@ -73,11 +143,13 @@ const MoodCalendar: React.FC<Props> = ({ entries }) => {
 };
 
 const buildCalendar = (
-  entries: ReflectionEntry[]
+  entries: ReflectionEntry[],
+  baseMonth: Date,
+  selectedDate?: string | null
 ): { weeks: (CalendarDay | null)[][]; monthLabel: string } => {
   const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const year = baseMonth.getFullYear();
+  const month = baseMonth.getMonth();
   const firstDayOfMonth = new Date(year, month, 1);
   const startOffset = firstDayOfMonth.getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -109,7 +181,8 @@ const buildCalendar = (
       key,
       label: day,
       categories: categoryState,
-      isToday: key === toDateKey(today)
+      isToday: key === toDateKey(today),
+      isSelected: Boolean(selectedDate && key === selectedDate)
     });
   }
 
@@ -135,6 +208,12 @@ const toDateKey = (value: string | Date) => {
   return `${year}-${month}-${day}`;
 };
 
+const addMonths = (date: Date, delta: number) => {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + delta);
+  return new Date(next.getFullYear(), next.getMonth(), 1);
+};
+
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#FFFFFF',
@@ -142,11 +221,34 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 12
   },
+  monthHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 8
+  },
   monthLabel: {
     textAlign: 'center',
     fontWeight: '700',
-    color: theme.colors.text,
+    color: theme.colors.text
+  },
+  monthControl: {
+    fontSize: 16,
+    color: theme.colors.primaryDark,
+    paddingHorizontal: 4
+  },
+  todayButton: {
+    alignSelf: 'center',
+    backgroundColor: theme.colors.primaryLight,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     marginBottom: 8
+  },
+  todayButtonText: {
+    color: theme.colors.primaryDark,
+    fontWeight: '600'
   },
   weekHeader: {
     flexDirection: 'row',
@@ -174,6 +276,10 @@ const styles = StyleSheet.create({
   todayCell: {
     borderRadius: 12,
     backgroundColor: '#F0F7F4'
+  },
+  selectedCell: {
+    borderWidth: 2,
+    borderColor: theme.colors.primary
   },
   dayLabel: {
     fontSize: 14,

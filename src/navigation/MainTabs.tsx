@@ -5,7 +5,7 @@ import { useTheme } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeStackNavigator from './HomeStack';
 import MoodHistoryScreen from '../screens/History/MoodHistoryScreen';
-import SimilarMoodScreen from '../screens/Community/SimilarMoodScreen';
+import MomentsStackNavigator from './MomentsStack';
 import StatisticsScreen from '../screens/Stats/StatisticsScreen';
 
 export type MainTabParamList = {
@@ -48,7 +48,7 @@ const MainTabs = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomeStackNavigator} options={{ title: '홈' }} />
-      <Tab.Screen name="Moments" component={SimilarMoodScreen} options={{ title: '감정 모아보기' }} />
+      <Tab.Screen name="Moments" component={MomentsStackNavigator} options={{ title: '감정 모아보기' }} />
       <Tab.Screen name="History" component={MoodHistoryScreen} options={{ title: '히스토리' }} />
       <Tab.Screen name="Stats" component={StatisticsScreen} options={{ title: '통계' }} />
     </Tab.Navigator>
