@@ -2,6 +2,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { useTheme } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HomeScreen from '../screens/Home/HomeScreen';
 import MoodEntryScreen from '../screens/Home/MoodEntryScreen';
 import MoodHistoryScreen from '../screens/History/MoodHistoryScreen';
@@ -17,9 +18,13 @@ export type MainTabParamList = {
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const TAB_BAR_BASE_HEIGHT = 64;
+const TAB_BAR_BASE_PADDING = 6;
+const TAB_BAR_TOP_PADDING = 8;
 
 const MainTabs = () => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -30,8 +35,9 @@ const MainTabs = () => {
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopColor: '#E4F5EB',
-          paddingBottom: 6,
-          height: 64
+          paddingBottom: TAB_BAR_BASE_PADDING + insets.bottom,
+          paddingTop: TAB_BAR_TOP_PADDING,
+          height: TAB_BAR_BASE_HEIGHT + insets.bottom
         },
         tabBarIcon: ({ color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home';

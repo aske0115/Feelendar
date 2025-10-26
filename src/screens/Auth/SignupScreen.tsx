@@ -9,6 +9,7 @@ import {
   View
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../../navigation/AppNavigator';
 import { theme } from '../../theme/theme';
 import { useAuth } from '../../context/AuthContext';
@@ -33,57 +34,59 @@ const SignupScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'Signup'
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={styles.inner}>
-        <Text style={styles.brand}>환영해요!</Text>
-        <Text style={styles.title}>함께 감정을 나눠보아요</Text>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.inner}>
+          <Text style={styles.brand}>환영해요!</Text>
+          <Text style={styles.title}>함께 감정을 나눠보아요</Text>
 
-        <View style={styles.form}>
-          <TextInput
-            placeholder="닉네임"
-            placeholderTextColor="#9CAFAA"
-            value={name}
-            onChangeText={setName}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="이메일"
-            placeholderTextColor="#9CAFAA"
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <TextInput
-            placeholder="비밀번호"
-            placeholderTextColor="#9CAFAA"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            style={styles.input}
-          />
-          <TextInput
-            placeholder="비밀번호 확인 (임시로 생략 가능)"
-            placeholderTextColor="#9CAFAA"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            style={styles.input}
-          />
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          <TouchableOpacity style={styles.primaryButton} onPress={handleSignup}>
-            <Text style={styles.primaryButtonText}>가입하고 시작하기</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.secondaryText}>이미 계정이 있으신가요? 로그인</Text>
-          </TouchableOpacity>
+          <View style={styles.form}>
+            <TextInput
+              placeholder="닉네임"
+              placeholderTextColor="#9CAFAA"
+              value={name}
+              onChangeText={setName}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="이메일"
+              placeholderTextColor="#9CAFAA"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.input}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <TextInput
+              placeholder="비밀번호"
+              placeholderTextColor="#9CAFAA"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="비밀번호 확인 (임시로 생략 가능)"
+              placeholderTextColor="#9CAFAA"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              style={styles.input}
+            />
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+            <TouchableOpacity style={styles.primaryButton} onPress={handleSignup}>
+              <Text style={styles.primaryButtonText}>가입하고 시작하기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.goBack()}>
+              <Text style={styles.secondaryText}>이미 계정이 있으신가요? 로그인</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -91,6 +94,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.primaryLight
+  },
+  keyboard: {
+    flex: 1
   },
   inner: {
     flex: 1,
