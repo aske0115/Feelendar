@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ScreenContainer from '../../components/ScreenContainer';
@@ -17,13 +17,23 @@ type SimilarMoodScreenProps = NativeStackScreenProps<MomentsStackParamList, 'Mom
 const SimilarMoodScreen: React.FC<SimilarMoodScreenProps> = ({ navigation }) => {
   const { entries } = useReflections();
   const [activeTab, setActiveTab] = useState<'categories' | 'calendar'>('categories');
+  const todayKey = toDateKey(new Date());
+  const todayMonthKey = todayKey.slice(0, 7);
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(todayKey);
 
   const selectedEntries = useMemo(() => {
     if (!selectedDate) return [];
     return entries.filter((entry) => toDateKey(entry.date) === selectedDate);
   }, [entries, selectedDate]);
+
+  useEffect(() => {
+    if (activeTab === 'calendar' && !selectedDate) {
+      setSelectedDate(todayKey);
+      const today = new Date();
+      setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    }
+  }, [activeTab, selectedDate, todayKey]);
 
   const renderCategoryView = () => (
     <SectionCard
@@ -76,8 +86,23 @@ const SimilarMoodScreen: React.FC<SimilarMoodScreenProps> = ({ navigation }) => 
         entries={entries}
         month={currentMonth}
         onChangeMonth={(date) => {
-          setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
-          setSelectedDate(null);
+          const normalized = new Date(date.getFullYear(), date.getMonth(), 1);
+          setCurrentMonth(normalized);
+          const monthKey = toDateKey(normalized).slice(0, 7);
+          if (selectedDate?.slice(0, 7) === monthKey) {
+            return;
+          }
+
+          if (monthKey === todayMonthKey) {
+            setSelectedDate(todayKey);
+            return;
+          }
+
+          const firstEntryForMonth = entries
+            .map((entry) => toDateKey(entry.date))
+            .find((key) => key.slice(0, 7) === monthKey);
+
+          setSelectedDate(firstEntryForMonth ?? null);
         }}
         selectable
         selectedDate={selectedDate}
