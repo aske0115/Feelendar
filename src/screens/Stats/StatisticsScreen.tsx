@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import WeeklyTrend from '../../components/WeeklyTrend';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
+import TabHeader from '../../components/TabHeader';
 import { useReflections } from '../../context/MoodContext';
 import { useReflectionStats } from '../../hooks/useMoodStats';
 import { theme } from '../../theme/theme';
@@ -13,6 +14,12 @@ const StatisticsScreen: React.FC = () => {
 
   return (
     <ScreenContainer>
+      <TabHeader
+        icon="stats-chart"
+        title="통계"
+        description="패턴을 찾아 마음의 변화를 이해해보세요"
+        compact
+      />
       <SectionCard title="주간 감정 트렌드" subtitle="좋았던 일, 아쉬웠던 일, 슬펐던 일을 색으로 정리했어요">
         <WeeklyTrend weeklyStats={stats.weeklyStats} />
       </SectionCard>

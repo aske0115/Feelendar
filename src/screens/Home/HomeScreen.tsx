@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import MoodCard from '../../components/MoodCard';
+import TabHeader from '../../components/TabHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useReflections } from '../../context/MoodContext';
 import { useReflectionStats } from '../../hooks/useMoodStats';
@@ -21,6 +22,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   return (
     <ScreenContainer>
+      <TabHeader
+        icon="home"
+        title="홈"
+        description="오늘 하루를 정리하고 감정을 채워보세요"
+        compact
+      />
       <View style={styles.header}>
         <Text style={styles.greeting}>좋은 밤이에요, {user?.name ?? '감정 여행자'}님</Text>
         <Text style={styles.subtitle}>오늘 하루를 세 가지 감정으로 정리해보세요</Text>
@@ -85,7 +92,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   header: {
-    gap: 4
+    gap: 4,
+    marginBottom: 12
   },
   recordButton: {
     backgroundColor: theme.colors.primary,

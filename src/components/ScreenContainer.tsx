@@ -5,12 +5,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../theme/theme';
 
 const BASE_HORIZONTAL_PADDING = 20;
-const BASE_TOP_PADDING = 16;
-const BASE_BOTTOM_PADDING = 40;
+const BASE_TOP_PADDING = 12;
+const BASE_BOTTOM_PADDING = 28;
 const CONTENT_GAP = 16;
 
 const ScreenContainer: React.FC<React.PropsWithChildren> = ({ children }) => {
   const insets = useSafeAreaInsets();
+
+  const topPadding = Math.max(insets.top, BASE_TOP_PADDING);
+  const bottomPadding = BASE_BOTTOM_PADDING + insets.bottom;
+  const leftPadding = BASE_HORIZONTAL_PADDING + insets.left;
+  const rightPadding = BASE_HORIZONTAL_PADDING + insets.right;
 
   return (
     <LinearGradient
@@ -19,14 +24,14 @@ const ScreenContainer: React.FC<React.PropsWithChildren> = ({ children }) => {
     >
       <ScrollView
         style={styles.scroll}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never"
         contentContainerStyle={[
           styles.container,
           {
-            paddingTop: BASE_TOP_PADDING + insets.top,
-            paddingBottom: BASE_BOTTOM_PADDING + insets.bottom,
-            paddingLeft: BASE_HORIZONTAL_PADDING + insets.left,
-            paddingRight: BASE_HORIZONTAL_PADDING + insets.right
+            paddingTop: topPadding,
+            paddingBottom: bottomPadding,
+            paddingLeft: leftPadding,
+            paddingRight: rightPadding
           }
         ]}
       >

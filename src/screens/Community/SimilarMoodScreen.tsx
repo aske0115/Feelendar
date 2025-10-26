@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import MoodCalendar from '../../components/MoodCalendar';
+import TabHeader from '../../components/TabHeader';
 import { useReflections } from '../../context/MoodContext';
 import { reflectionLabels, ReflectionCategory } from '../../types/mood';
 import { theme } from '../../theme/theme';
@@ -120,6 +121,12 @@ const SimilarMoodScreen: React.FC<SimilarMoodScreenProps> = ({ navigation }) => 
 
   return (
     <ScreenContainer>
+      <TabHeader
+        icon="book"
+        title="감정 모아보기"
+        description="카테고리 또는 캘린더로 마음의 기록을 살펴보세요"
+        compact
+      />
       <View style={styles.tabContainer}>
         <TouchableOpacity
           onPress={() => setActiveTab('categories')}
