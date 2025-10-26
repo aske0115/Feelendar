@@ -1,14 +1,19 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import MoodCard from '../../components/MoodCard';
 import { useAuth } from '../../context/AuthContext';
 import { useReflections } from '../../context/MoodContext';
 import { useReflectionStats } from '../../hooks/useMoodStats';
+import MoodCalendar from '../../components/MoodCalendar';
+import { HomeStackParamList } from '../../navigation/HomeStack';
 import { theme } from '../../theme/theme';
 
-const HomeScreen: React.FC = () => {
+type HomeScreenProps = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>;
+
+const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { user } = useAuth();
   const { entries } = useReflections();
   const stats = useReflectionStats(entries);
@@ -20,6 +25,16 @@ const HomeScreen: React.FC = () => {
         <Text style={styles.greeting}>좋은 밤이에요, {user?.name ?? '감정 여행자'}님</Text>
         <Text style={styles.subtitle}>오늘 하루를 세 가지 감정으로 정리해보세요</Text>
       </View>
+      <TouchableOpacity
+        style={styles.recordButton}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('MoodEntry')}
+      >
+        <Text style={styles.recordButtonText}>기분 기록하기</Text>
+      </TouchableOpacity>
+      <SectionCard title="감정 캘린더" subtitle="오늘 기록한 감정이 캘린더에 표시돼요">
+        <MoodCalendar entries={entries} />
+      </SectionCard>
 
       {latest ? (
         <SectionCard title="가장 최근 기록" subtitle="방금 전 정리한 하루">
@@ -71,6 +86,21 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   header: {
     gap: 4
+  },
+  recordButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: 'center',
+    shadowColor: '#0D473A',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 5
+  },
+  recordButtonText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700'
   },
   greeting: {
     fontSize: 26,

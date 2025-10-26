@@ -1,15 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import ScreenContainer from '../../components/ScreenContainer';
 import SectionCard from '../../components/SectionCard';
 import { useReflections } from '../../context/MoodContext';
 import { reflectionLabels, ReflectionCategory } from '../../types/mood';
 import { theme } from '../../theme/theme';
-import { MainTabParamList } from '../../navigation/MainTabs';
+import { HomeStackParamList } from '../../navigation/HomeStack';
 
 const categories: ReflectionCategory[] = ['good', 'bad', 'sad'];
-type MoodEntryScreenProps = BottomTabScreenProps<MainTabParamList, 'LogMood'>;
+type MoodEntryScreenProps = NativeStackScreenProps<HomeStackParamList, 'MoodEntry'>;
 
 const MoodEntryScreen: React.FC<MoodEntryScreenProps> = ({ navigation }) => {
   const { addEntry } = useReflections();
@@ -51,7 +51,10 @@ const MoodEntryScreen: React.FC<MoodEntryScreenProps> = ({ navigation }) => {
     Alert.alert('저장 완료', '오늘의 감정이 기록되었어요. 좋은 꿈 꾸세요!', [
       {
         text: '확인',
-        onPress: () => navigation.navigate('Moments')
+        onPress: () => {
+          navigation.popToTop();
+          navigation.getParent()?.navigate('Moments');
+        }
       }
     ]);
   };
