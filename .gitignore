@@ -3,6 +3,10 @@ node_modules/
 .expo-shared/
 dist/
 build/
+.env
+.env.local
+GoogleService-Info.plist
+google-services.json
 # macOS
 .DS_Store
 # Expo local files

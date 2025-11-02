@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile
+} from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export type UserProfile = {
   id: string;
@@ -11,57 +19,64 @@ type AuthContextValue = {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [mockUsers, setMockUsers] = useState<Record<string, UserProfile & { password: string }>>({});
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
+        return;
+      }
+
+      const profile: UserProfile = {
+        id: firebaseUser.uid,
+        name: firebaseUser.displayName ?? firebaseUser.email?.split('@')[0] ?? '감정 여행자',
+        email: firebaseUser.email ?? ''
+      };
+
+      setUser(profile);
+    });
+
+    return unsubscribe;
+  }, []);
 
   const login = async (email: string, password: string) => {
-    const normalizedEmail = email.trim().toLowerCase();
-    const existingUser = normalizedEmail ? mockUsers[normalizedEmail] : null;
-
-    if (existingUser) {
-      setUser(existingUser);
-      return;
-    }
-
-    const fallbackEmail = normalizedEmail || `guest-${Date.now()}@feelendar.app`;
-    const fallbackName = normalizedEmail
-      ? normalizedEmail.split('@')[0]
-      : '감정 여행자';
-
-    const newUser: UserProfile & { password: string } = {
-      id: Date.now().toString(),
-      name: fallbackName,
-      email: fallbackEmail,
-      password
-    };
-
-    setMockUsers((prev) => ({ ...prev, [fallbackEmail]: newUser }));
-    setUser(newUser);
+    const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
+    const firebaseUser = credential.user;
+    if (!firebaseUser) return;
+    setUser({
+      id: firebaseUser.uid,
+      name: firebaseUser.displayName ?? firebaseUser.email?.split('@')[0] ?? '감정 여행자',
+      email: firebaseUser.email ?? ''
+    });
   };
 
   const signup = async (name: string, email: string, password: string) => {
-    const normalizedEmail = email.trim().toLowerCase();
-    const fallbackEmail = normalizedEmail || `user-${Date.now()}@feelendar.app`;
-    const displayName = name.trim() || (normalizedEmail ? normalizedEmail.split('@')[0] : '감정 여행자');
+    const credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+    const firebaseUser = credential.user;
+    const displayName = name.trim() || firebaseUser.email?.split('@')[0] || '감정 여행자';
 
-    const newUser: UserProfile & { password: string } = {
-      id: Date.now().toString(),
+    await updateProfile(firebaseUser, {
+      displayName
+    });
+
+    setUser({
+      id: firebaseUser.uid,
       name: displayName,
-      email: fallbackEmail,
-      password
-    };
-
-    setMockUsers((prev) => ({ ...prev, [fallbackEmail]: newUser }));
-    setUser(newUser);
+      email: firebaseUser.email ?? ''
+    });
   };
 
-  const logout = () => setUser(null);
+  const logout = async () => {
+    await signOut(auth);
+    setUser(null);
+  };
 
   const value = useMemo(
     () => ({

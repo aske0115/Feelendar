@@ -32,31 +32,37 @@ const MoodEntryScreen: React.FC<MoodEntryScreenProps> = ({ navigation }) => {
     sad: setSad
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!good.trim() && !bad.trim() && !sad.trim()) {
       Alert.alert('기록하기', '오늘 하루의 감정을 한 가지 이상 적어주세요.');
       return;
     }
 
-    addEntry({
-      good,
-      bad,
-      sad,
-      date: new Date().toISOString()
-    });
+    try {
+      await addEntry({
+        good,
+        bad,
+        sad,
+        date: new Date().toISOString()
+      });
 
-    setGood('');
-    setBad('');
-    setSad('');
-    Alert.alert('저장 완료', '오늘의 감정이 기록되었어요. 좋은 꿈 꾸세요!', [
-      {
-        text: '확인',
-        onPress: () => {
-          navigation.popToTop();
-          navigation.getParent()?.navigate('Moments');
+      setGood('');
+      setBad('');
+      setSad('');
+      Alert.alert('저장 완료', '오늘의 감정이 기록되었어요. 좋은 꿈 꾸세요!', [
+        {
+          text: '확인',
+          onPress: () => {
+            navigation.popToTop();
+            navigation.getParent()?.navigate('Moments');
+          }
         }
-      }
-    ]);
+      ]);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : '기록 저장 중 문제가 발생했어요.';
+      Alert.alert('저장 실패', message);
+    }
   };
 
   return (
@@ -88,7 +94,7 @@ const MoodEntryScreen: React.FC<MoodEntryScreenProps> = ({ navigation }) => {
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitText}>오늘 하루 정리하기</Text>
         </TouchableOpacity>
-        <Text style={styles.helperText}>* Firebase 연동 전까지는 임시 저장으로 기록돼요.</Text>
+        <Text style={styles.helperText}>* 저장된 감정은 언제든지 감정 모아보기에서 확인할 수 있어요.</Text>
       </SectionCard>
     </ScreenContainer>
   );

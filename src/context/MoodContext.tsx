@@ -1,51 +1,91 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  updateDoc
+} from 'firebase/firestore';
 import { ReflectionEntry } from '../types/mood';
+import { db } from '../lib/firebase';
+import { useAuth } from './AuthContext';
 
 export type ReflectionContextValue = {
   entries: ReflectionEntry[];
-  addEntry: (entry: Omit<ReflectionEntry, 'id'>) => void;
-  updateEntry: (id: string, updates: Partial<Omit<ReflectionEntry, 'id'>>) => void;
-  deleteEntry: (id: string) => void;
+  addEntry: (entry: Omit<ReflectionEntry, 'id'>) => Promise<void>;
+  updateEntry: (id: string, updates: Partial<Omit<ReflectionEntry, 'id'>>) => Promise<void>;
+  deleteEntry: (id: string) => Promise<void>;
 };
 
 const ReflectionContext = createContext<ReflectionContextValue | undefined>(undefined);
 
-const initialEntries: ReflectionEntry[] = [
-  {
-    id: 'seed-1',
-    date: new Date().toISOString(),
-    good: '퇴근길에 들른 카페에서 맛있는 디저트를 먹었어요.',
-    bad: '회의 준비를 미루다가 급하게 하느라 마음이 급했어요.',
-    sad: '친구와의 약속을 지키지 못한 것이 마음에 걸렸어요.'
-  },
-  {
-    id: 'seed-2',
-    date: new Date(Date.now() - 86400000).toISOString(),
-    good: '산책하면서 봄바람을 느끼며 힐링했어요.',
-    bad: '업무 중 집중이 잘 되지 않아 작은 실수가 있었어요.',
-    sad: '가족과 통화하면서 서로 바빠서 자주 못 만난다는 이야기를 들었어요.'
-  }
-];
-
 export const ReflectionProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
-  const [entries, setEntries] = useState<ReflectionEntry[]>(initialEntries);
+  const { user } = useAuth();
+  const [entries, setEntries] = useState<ReflectionEntry[]>([]);
 
-  const addEntry = (entry: Omit<ReflectionEntry, 'id'>) => {
-    const newEntry: ReflectionEntry = {
+  useEffect(() => {
+    if (!user) {
+      setEntries([]);
+      return;
+    }
+
+    const entriesRef = collection(db, 'users', user.id, 'entries');
+    const q = query(entriesRef, orderBy('date', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const nextEntries: ReflectionEntry[] = snapshot.docs.map((item) => {
+        const data = item.data() as Partial<ReflectionEntry> & {
+          date?: string | { toDate: () => Date };
+        };
+        const rawDate = data.date;
+        let dateString = '';
+        if (typeof rawDate === 'string') {
+          dateString = rawDate;
+        } else if (rawDate && typeof rawDate === 'object' && 'toDate' in rawDate) {
+          dateString = (rawDate as { toDate: () => Date }).toDate().toISOString();
+        }
+
+        return {
+          id: item.id,
+          good: data.good ?? '',
+          bad: data.bad ?? '',
+          sad: data.sad ?? '',
+          date: dateString
+        };
+      });
+      setEntries(nextEntries);
+    });
+
+    return unsubscribe;
+  }, [user?.id]);
+
+  const addEntry = async (entry: Omit<ReflectionEntry, 'id'>) => {
+    if (!user) throw new Error('로그인이 필요합니다.');
+    const entriesRef = collection(db, 'users', user.id, 'entries');
+    await addDoc(entriesRef, {
       ...entry,
-      id: Date.now().toString()
-    };
-    setEntries((prev) => [newEntry, ...prev]);
+      date: entry.date ?? new Date().toISOString(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
   };
 
-  const updateEntry = (id: string, updates: Partial<Omit<ReflectionEntry, 'id'>>) => {
-    setEntries((prev) =>
-      prev.map((entry) => (entry.id === id ? { ...entry, ...updates } : entry))
-    );
+  const updateEntry = async (id: string, updates: Partial<Omit<ReflectionEntry, 'id'>>) => {
+    if (!user) throw new Error('로그인이 필요합니다.');
+    const entryRef = doc(db, 'users', user.id, 'entries', id);
+    await updateDoc(entryRef, {
+      ...updates,
+      updatedAt: serverTimestamp()
+    });
   };
 
-  const deleteEntry = (id: string) => {
-    setEntries((prev) => prev.filter((entry) => entry.id !== id));
+  const deleteEntry = async (id: string) => {
+    if (!user) throw new Error('로그인이 필요합니다.');
+    const entryRef = doc(db, 'users', user.id, 'entries', id);
+    await deleteDoc(entryRef);
   };
 
   const value = useMemo(
