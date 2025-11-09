@@ -9,13 +9,16 @@ import { theme } from '../../theme/theme';
 import { HomeStackParamList } from '../../navigation/HomeStack';
 
 const categories: ReflectionCategory[] = ['good', 'bad', 'sad'];
+type EntryMode = ReflectionCategory | 'all';
 type MoodEntryScreenProps = NativeStackScreenProps<HomeStackParamList, 'MoodEntry'>;
 
-const MoodEntryScreen: React.FC<MoodEntryScreenProps> = ({ navigation }) => {
+const MoodEntryScreen: React.FC<MoodEntryScreenProps> = ({ navigation, route }) => {
   const { addEntry } = useReflections();
   const [good, setGood] = useState('');
   const [bad, setBad] = useState('');
   const [sad, setSad] = useState('');
+  const entryMode: EntryMode = route.params?.category ?? 'all';
+  const visibleCategories = entryMode === 'all' ? categories : [entryMode];
 
   const values = useMemo<Record<ReflectionCategory, string>>(
     () => ({
@@ -33,8 +36,9 @@ const MoodEntryScreen: React.FC<MoodEntryScreenProps> = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
-    if (!good.trim() && !bad.trim() && !sad.trim()) {
-      Alert.alert('기록하기', '오늘 하루의 감정을 한 가지 이상 적어주세요.');
+    const hasContent = visibleCategories.some((category) => values[category].trim());
+    if (!hasContent) {
+      Alert.alert('기록하기', '선택한 감정을 한 가지 이상 적어주세요.');
       return;
     }
 
@@ -46,18 +50,19 @@ const MoodEntryScreen: React.FC<MoodEntryScreenProps> = ({ navigation }) => {
         date: new Date().toISOString()
       });
 
-      setGood('');
-      setBad('');
-      setSad('');
-      Alert.alert('저장 완료', '오늘의 감정이 기록되었어요. 좋은 꿈 꾸세요!', [
-        {
-          text: '확인',
-          onPress: () => {
-            navigation.popToTop();
-            navigation.getParent()?.navigate('Moments');
+      visibleCategories.forEach((category) => setters[category](''));
+
+      setTimeout(() => {
+        Alert.alert('저장 완료', '오늘의 감정이 기록되었어요. 좋은 꿈 꾸세요!', [
+          {
+            text: '확인',
+            onPress: () => {
+              navigation.popToTop();
+              navigation.getParent()?.navigate('Home');
+            }
           }
-        }
-      ]);
+        ]);
+      }, 50);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : '기록 저장 중 문제가 발생했어요.';
@@ -67,8 +72,15 @@ const MoodEntryScreen: React.FC<MoodEntryScreenProps> = ({ navigation }) => {
 
   return (
     <ScreenContainer>
-      <SectionCard title="자기 전 감정 기록" subtitle="각 칸에 떠오르는 순간을 가볍게 적어보세요">
-        {categories.map((key) => {
+      <SectionCard
+        title={entryMode === 'all' ? '자기 전 감정 기록' : `${reflectionLabels[entryMode].title} 적어보기`}
+        subtitle={
+          entryMode === 'all'
+            ? '각 칸에 떠오르는 순간을 가볍게 적어보세요'
+            : `${reflectionLabels[entryMode].emoji} ${reflectionLabels[entryMode].description}`
+        }
+      >
+        {visibleCategories.map((key) => {
           const label = reflectionLabels[key];
           return (
             <View key={key} style={styles.section}>
@@ -94,7 +106,9 @@ const MoodEntryScreen: React.FC<MoodEntryScreenProps> = ({ navigation }) => {
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitText}>오늘 하루 정리하기</Text>
         </TouchableOpacity>
-        <Text style={styles.helperText}>* 저장된 감정은 언제든지 감정 모아보기에서 확인할 수 있어요.</Text>
+        <Text style={styles.helperText}>
+          * 저장된 감정은 언제든지 감정 모아보기에서 확인할 수 있어요.
+        </Text>
       </SectionCard>
     </ScreenContainer>
   );

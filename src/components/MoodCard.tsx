@@ -10,28 +10,37 @@ type Props = {
 const orderedCategories: ReflectionCategory[] = ['good', 'bad', 'sad'];
 
 const MoodCard: React.FC<Props> = ({ entry }) => {
-  const date = new Date(entry.date);
-  const formatted = `${date.getMonth() + 1}월 ${date.getDate()}일 (${['일', '월', '화', '수', '목', '금', '토'][date.getDay()]}요일)`;
+
+  const sections = orderedCategories
+    .map((category) => {
+      const label = reflectionLabels[category];
+      const value = entry[category];
+      const trimmed = value.trim();
+      if (!trimmed) {
+        return null;
+      }
+      return {
+        category,
+        label,
+        value: trimmed
+      };
+    })
+    .filter((section): section is { category: ReflectionCategory; label: typeof reflectionLabels[keyof typeof reflectionLabels]; value: string } => !!section);
+
+  if (sections.length === 0) {
+    return null;
+  }
 
   return (
     <View style={styles.card}>
-      <Text style={styles.date}>{formatted}</Text>
-      <View style={styles.divider} />
-      {orderedCategories.map((category) => {
-        const label = reflectionLabels[category];
-        const value = entry[category];
-        const isEmpty = !value.trim();
-        return (
-          <View key={category} style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {label.emoji} {label.title}
-            </Text>
-            <Text style={[styles.sectionContent, isEmpty && styles.emptyText]}>
-              {isEmpty ? '아직 기록이 없어요.' : value}
-            </Text>
-          </View>
-        );
-      })}
+      {sections.map((section) => (
+        <View key={section.category} style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            {section.label.emoji} {section.label.title}
+          </Text>
+          <Text style={styles.sectionContent}>{section.value}</Text>
+        </View>
+      ))}
     </View>
   );
 };
@@ -42,15 +51,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     gap: 16
-  },
-  date: {
-    fontSize: 13,
-    color: theme.colors.muted,
-    fontWeight: '600'
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#E4F5EB'
   },
   section: {
     gap: 6

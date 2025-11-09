@@ -10,9 +10,44 @@ import { useReflections } from '../../context/MoodContext';
 import { useReflectionStats } from '../../hooks/useMoodStats';
 import MoodCalendar from '../../components/MoodCalendar';
 import { HomeStackParamList } from '../../navigation/HomeStack';
+import { reflectionLabels, ReflectionCategory } from '../../types/mood';
 import { theme } from '../../theme/theme';
 
 type HomeScreenProps = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>;
+
+type RecordOption = {
+  key: ReflectionCategory | 'all';
+  label: string;
+  description: string;
+  category: ReflectionCategory | 'all';
+};
+
+const recordButtons: RecordOption[] = [
+  {
+    key: 'good',
+    label: '좋은 기록',
+    description: reflectionLabels.good.description,
+    category: 'good'
+  },
+  {
+    key: 'bad',
+    label: '아쉬운 기록',
+    description: reflectionLabels.bad.description,
+    category: 'bad'
+  },
+  {
+    key: 'sad',
+    label: '슬픈 기록',
+    description: reflectionLabels.sad.description,
+    category: 'sad'
+  },
+  {
+    key: 'all',
+    label: '모두 기록',
+    description: '세 가지 감정을 한 번에 적기',
+    category: 'all'
+  }
+];
 
 const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
   const { user } = useAuth();
@@ -32,13 +67,42 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <Text style={styles.greeting}>좋은 밤이에요, {user?.name ?? '감정 여행자'}님</Text>
         <Text style={styles.subtitle}>오늘 하루를 세 가지 감정으로 정리해보세요</Text>
       </View>
-      <TouchableOpacity
-        style={styles.recordButton}
-        activeOpacity={0.9}
-        onPress={() => navigation.navigate('MoodEntry')}
-      >
-        <Text style={styles.recordButtonText}>기분 기록하기</Text>
-      </TouchableOpacity>
+      <SectionCard title="기분 기록하기" subtitle="오늘 떠오르는 감정 버튼을 눌러 바로 기록해보세요">
+        <View style={styles.recordGrid}>
+          {recordButtons.map((option) => (
+            <TouchableOpacity
+              key={option.key}
+              style={[
+                styles.recordButton,
+                option.key === 'all' ? styles.recordButtonPrimary : styles.recordButtonSecondary
+              ]}
+              activeOpacity={0.9}
+              onPress={() =>
+                navigation.navigate('MoodEntry', {
+                  category: option.category
+                })
+              }
+            >
+              <Text
+                style={[
+                  styles.recordButtonText,
+                  option.key !== 'all' && styles.recordButtonTextSecondary
+                ]}
+              >
+                {option.label}
+              </Text>
+              <Text
+                style={[
+                  styles.recordButtonHint,
+                  option.key !== 'all' && styles.recordButtonHintSecondary
+                ]}
+              >
+                {option.description}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </SectionCard>
       <SectionCard title="감정 캘린더" subtitle="오늘 기록한 감정이 캘린더에 표시돼요">
         <MoodCalendar entries={entries} />
       </SectionCard>
@@ -95,20 +159,46 @@ const styles = StyleSheet.create({
     gap: 4,
     marginBottom: 12
   },
+  recordGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12
+  },
   recordButton: {
-    backgroundColor: theme.colors.primary,
+    flexBasis: '48%',
+    flexGrow: 1,
     borderRadius: 16,
-    paddingVertical: 18,
-    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    gap: 6,
     shadowColor: '#0D473A',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 5
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4
+  },
+  recordButtonPrimary: {
+    backgroundColor: theme.colors.primary
+  },
+  recordButtonSecondary: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: theme.colors.primaryLight
   },
   recordButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF'
+  },
+  recordButtonTextSecondary: {
+    color: theme.colors.primaryDark
+  },
+  recordButtonHint: {
+    fontSize: 12,
     color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700'
+    opacity: 0.85
+  },
+  recordButtonHintSecondary: {
+    color: theme.colors.muted
   },
   greeting: {
     fontSize: 26,

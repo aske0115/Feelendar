@@ -2,10 +2,15 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screens/Home/HomeScreen';
 import MoodEntryScreen from '../screens/Home/MoodEntryScreen';
+import { ReflectionCategory } from '../types/mood';
 
 export type HomeStackParamList = {
   HomeMain: undefined;
-  MoodEntry: undefined;
+  MoodEntry:
+    | {
+        category?: ReflectionCategory | 'all';
+      }
+    | undefined;
 };
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();

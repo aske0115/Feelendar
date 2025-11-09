@@ -11,7 +11,7 @@ import {
   updateDoc
 } from 'firebase/firestore';
 import { ReflectionEntry } from '../types/mood';
-import { db } from '../lib/firebase';
+import { auth, db } from '../lib/firebase';
 import { useAuth } from './AuthContext';
 
 export type ReflectionContextValue = {
@@ -63,8 +63,9 @@ export const ReflectionProvider: React.FC<React.PropsWithChildren> = ({ children
   }, [user?.id]);
 
   const addEntry = async (entry: Omit<ReflectionEntry, 'id'>) => {
-    if (!user) throw new Error('로그인이 필요합니다.');
-    const entriesRef = collection(db, 'users', user.id, 'entries');
+    const userId = user?.id ?? auth.currentUser?.uid;
+    if (!userId) throw new Error('로그인이 필요합니다.');
+    const entriesRef = collection(db, 'users', userId, 'entries');
     await addDoc(entriesRef, {
       ...entry,
       date: entry.date ?? new Date().toISOString(),
@@ -74,8 +75,9 @@ export const ReflectionProvider: React.FC<React.PropsWithChildren> = ({ children
   };
 
   const updateEntry = async (id: string, updates: Partial<Omit<ReflectionEntry, 'id'>>) => {
-    if (!user) throw new Error('로그인이 필요합니다.');
-    const entryRef = doc(db, 'users', user.id, 'entries', id);
+    const userId = user?.id ?? auth.currentUser?.uid;
+    if (!userId) throw new Error('로그인이 필요합니다.');
+    const entryRef = doc(db, 'users', userId, 'entries', id);
     await updateDoc(entryRef, {
       ...updates,
       updatedAt: serverTimestamp()
@@ -83,8 +85,9 @@ export const ReflectionProvider: React.FC<React.PropsWithChildren> = ({ children
   };
 
   const deleteEntry = async (id: string) => {
-    if (!user) throw new Error('로그인이 필요합니다.');
-    const entryRef = doc(db, 'users', user.id, 'entries', id);
+    const userId = user?.id ?? auth.currentUser?.uid;
+    if (!userId) throw new Error('로그인이 필요합니다.');
+    const entryRef = doc(db, 'users', userId, 'entries', id);
     await deleteDoc(entryRef);
   };
 
